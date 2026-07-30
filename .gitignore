@@ -1,0 +1,10 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+smart_jira.db
+frontend/node_modules/
+frontend/dist/
+smart-pm-tool/
+app/
+src/
