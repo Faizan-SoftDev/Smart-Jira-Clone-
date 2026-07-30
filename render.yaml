@@ -3,7 +3,7 @@ services:
     name: smart-jira-api
     runtime: docker
     region: singapore
-    plan: starter
+    plan: free
     rootDir: backend
     healthCheckPath: /health
     envVars:
@@ -29,11 +29,11 @@ services:
 
   - type: keyvalue
     name: smart-jira-redis
-    plan: starter
+    plan: free
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []
 
 databases:
   - name: smart-jira-db
-    plan: starter
+    plan: free
     region: singapore
