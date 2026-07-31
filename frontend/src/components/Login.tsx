@@ -5,6 +5,12 @@ interface LoginProps {
   onAuthenticated: (token: string, role: string) => void;
 }
 
+const benefits = [
+  ["◈", "One place for every project", "Plan requests, releases, bugs, and team priorities without losing context."],
+  ["↗", "Move work at high velocity", "Give every teammate a clear view of what matters now and what comes next."],
+  ["✦", "AI that helps you decide", "Turn a task into an informed estimate in seconds, right from the board."],
+];
+
 export function Login({ apiBaseUrl, onAuthenticated }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,11 +26,7 @@ export function Login({ apiBaseUrl, onAuthenticated }: LoginProps) {
     try {
       const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
       const body = mode === "login" ? { email, password } : { email, password, display_name: displayName };
-      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const payload = (await response.json()) as { access_token?: string; detail?: string; user?: { role?: string } };
       if (!response.ok || !payload.access_token || !payload.user?.role) throw new Error(payload.detail ?? "Authentication failed");
       onAuthenticated(payload.access_token, payload.user.role);
@@ -35,32 +37,63 @@ export function Login({ apiBaseUrl, onAuthenticated }: LoginProps) {
     }
   }
 
+  const switchMode = (nextMode: "login" | "register") => {
+    setMode(nextMode);
+    setError(null);
+  };
+
   return (
-    <main className="relative grid min-h-screen overflow-hidden bg-slate-950 px-5 py-8 text-slate-900 lg:grid-cols-2 lg:p-10">
-      <div className="absolute -left-24 top-0 h-80 w-80 rounded-full bg-blue-600/25 blur-3xl" />
-      <div className="absolute -bottom-28 right-0 h-96 w-96 rounded-full bg-cyan-400/15 blur-3xl" />
-      <section className="relative mx-auto flex w-full max-w-xl flex-col justify-between py-3 text-white lg:mx-0 lg:py-10">
-        <div>
-          <div className="mb-12 inline-flex items-center gap-3 font-semibold tracking-tight"><span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-500 shadow-lg shadow-blue-500/30">SJ</span> Smart Jira</div>
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-blue-300">Work, made visible</p>
-          <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">Keep every project moving with calm clarity.</h1>
-          <p className="mt-5 max-w-md text-base leading-7 text-slate-300">Plan work, align your team, and move tasks forward in a focused, real-time workspace.</p>
+    <main className="landing-page">
+      <header className="landing-nav">
+        <a className="brand" href="#top" aria-label="Smart Jira home"><span className="brand-mark">▲</span><span>Smart Jira</span></a>
+        <nav className="landing-links" aria-label="Main navigation"><a href="#features">Features</a><a href="#how-it-works">How it works</a><a href="#resources">Resources</a></nav>
+        <div className="nav-actions"><button className="text-button" onClick={() => switchMode("login")}>Sign in</button><button className="nav-cta" onClick={() => switchMode("register")}>Get started</button></div>
+      </header>
+
+      <div className="announcement">New: AI task estimates are now available for every project. <a href="#features">Learn more →</a></div>
+
+      <section className="hero" id="top">
+        <div className="hero-copy">
+          <p className="eyebrow"><span>SMART</span> PROJECT DELIVERY</p>
+          <h1>Project management for <em>high-velocity</em> teams</h1>
+          <p className="hero-description">Plan, track, and deliver outstanding work with a focused workspace your whole team will actually enjoy using.</p>
+          <div className="hero-proof"><span className="avatars"><i>F</i><i>A</i><i>M</i></span><span>Built for teams that move together</span></div>
         </div>
-        <div className="mt-14 hidden grid-cols-3 gap-3 sm:grid lg:grid-cols-1 xl:grid-cols-3">
-          {[["Live board", "Stay in sync"], ["Secure roles", "Right access"], ["AI insights", "Plan smarter"]].map(([title, text]) => <div key={title} className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur"><p className="font-medium">{title}</p><p className="mt-1 text-sm text-slate-400">{text}</p></div>)}
+
+        <aside className="auth-card" aria-label="Account access">
+          <div className="auth-tabs"><button className={mode === "register" ? "active" : ""} onClick={() => switchMode("register")}>Get started</button><button className={mode === "login" ? "active" : ""} onClick={() => switchMode("login")}>Sign in</button></div>
+          <h2>{mode === "login" ? "Welcome back" : "Start building momentum"}</h2>
+          <p>{mode === "login" ? "Sign in to pick up where your team left off." : "Create your workspace and bring your team along."}</p>
+          <form onSubmit={submit} className="auth-form">
+            {mode === "register" && <label>Your name<input required minLength={2} value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Ada Lovelace" /></label>}
+            <label>Work email<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" /></label>
+            <label>Password<input required type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={mode === "register" ? 12 : 1} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" /></label>
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <button disabled={isSubmitting} className="primary-button">{isSubmitting ? "Please wait…" : mode === "login" ? "Sign in to Smart Jira" : "Create free account"}</button>
+          </form>
+          <p className="auth-footnote">{mode === "login" ? "Need an account?" : "Already have an account?"} <button onClick={() => switchMode(mode === "login" ? "register" : "login")}>{mode === "login" ? "Get started" : "Sign in"}</button></p>
+        </aside>
+      </section>
+
+      <section className="trusted"><p>BUILT FOR FOCUSED, AMBITIOUS TEAMS</p><div><span>Vortex</span><span>northstar</span><span>MONO</span><span>cobalt</span><span>apex</span></div></section>
+
+      <section className="feature-intro" id="features">
+        <p className="section-kicker">ONE CALM WORKSPACE</p><h2>Everything your team needs to ship with confidence.</h2><p>Keep the work visible, the conversations useful, and the next step obvious.</p>
+        <div className="feature-tabs"><button className="selected">Team workspace</button><button>Live board</button><button>AI insights</button><button>Role-based access</button></div>
+        <div className="workspace-preview">
+          <div className="preview-sidebar"><b>▲ Smart Jira</b><span className="preview-active">Overview</span><span>My work</span><span>Projects</span><span>Team</span><span>Reports</span></div>
+          <div className="preview-main"><div className="preview-title"><span><small>PROJECT / ATLAS</small><strong>Release planning</strong></span><button>+ Create task</button></div><div className="preview-columns">{[["To do", ["Update onboarding flow", "Prepare launch notes"]], ["In progress", ["Mobile navigation", "Improve search results"]], ["Done", ["Design system audit"]]].map(([column, cards]) => <div className="mini-column" key={column as string}><p>{column as string}<b>{(cards as string[]).length}</b></p>{(cards as string[]).map((card, index) => <article key={card}><i className={index === 1 ? "purple" : "blue"} />{card}<small>•••</small></article>)}</div>)}</div></div>
         </div>
       </section>
-      <section className="relative my-auto mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-950/30 sm:p-8">
-        <div className="mb-7"><p className="text-sm font-medium text-blue-600">{mode === "login" ? "Welcome back" : "Get started"}</p><h2 className="mt-1 text-2xl font-semibold tracking-tight">{mode === "login" ? "Sign in to your workspace" : "Create your developer account"}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{mode === "login" ? "Use your workspace credentials to continue." : "Your account will be created with Developer access."}</p></div>
-        <form onSubmit={submit} className="space-y-4">
-          {mode === "register" && <label className="block text-sm font-medium text-slate-700">Display name<input required minLength={2} value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Your name" className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></label>}
-          <label className="block text-sm font-medium text-slate-700">Email<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></label>
-          <label className="block text-sm font-medium text-slate-700">Password<input required type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={mode === "register" ? 12 : 1} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" className="mt-1.5 w-full rounded-xl border border-slate-300 px-3.5 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100" /></label>
-          {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{error}</p>}
-          <button disabled={isSubmitting} className="w-full rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60">{isSubmitting ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
-        </form>
-        <button type="button" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); }} className="mt-6 w-full text-sm font-medium text-blue-600 hover:text-blue-800">{mode === "login" ? "New here? Create a developer account" : "Already have an account? Sign in"}</button>
-      </section>
+
+      <section className="benefit-grid" id="how-it-works">{benefits.map(([icon, title, text]) => <article key={title}><span>{icon}</span><h3>{title}</h3><p>{text}</p><a href="#top">Explore Smart Jira →</a></article>)}</section>
+
+      <section className="ai-section"><div><p className="section-kicker">BUILT-IN INTELLIGENCE</p><h2>Make better calls, faster.</h2><p>Smart Jira’s AI analysis turns rough work into clear estimates, helping your team plan with less guesswork.</p><a className="inline-link" href="#top">See AI insights in action →</a></div><div className="ai-card"><div className="ai-spark">✦</div><p>AI estimate ready</p><strong>8 story points</strong><span>Based on scope, complexity, and similar work</span><div className="ai-bars"><i /><i /><i /><i /></div></div></section>
+
+      <section className="resource-section" id="resources"><p className="section-kicker">RESOURCES</p><h2>Learn how great teams get work done.</h2><div className="resource-cards">{["The guide to calmer project delivery", "How to make your delivery rhythm stick", "A practical guide to estimating work"].map((item, index) => <article key={item}><span>0{index + 1}</span><h3>{item}</h3><a href="#top">Read more →</a></article>)}</div></section>
+
+      <section className="final-cta"><h2>Bring your best work into focus.</h2><p>Start your Smart Jira workspace today. No credit card required.</p><button onClick={() => switchMode("register")}>Get started for free</button></section>
+      <footer><a className="brand" href="#top"><span className="brand-mark">▲</span><span>Smart Jira</span></a><span>© 2026 Smart Jira</span><div><a href="#top">Privacy</a><a href="#top">Terms</a><a href="#top">Support</a></div></footer>
     </main>
   );
 }
