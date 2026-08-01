@@ -1,7 +1,15 @@
 .env
+.env.*
+!.env.example
 .venv/
 __pycache__/
 *.py[cod]
+*.sqlite3
+staticfiles/
+media/
+coverage.xml
+.coverage
+htmlcov/
 smart_jira.db
 frontend/node_modules/
 frontend/dist/

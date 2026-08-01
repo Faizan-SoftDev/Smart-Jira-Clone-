@@ -1,9 +1,29 @@
-fastapi>=0.115,<1.0
-openai>=1.55,<3.0
-pydantic>=2.7,<3.0
-email-validator>=2.2,<3.0
-PyJWT>=2.9,<3.0
+# Web application
+Django>=5.2,<6.0
+djangorestframework>=3.15,<4.0
+django-filter>=24.0,<26.0
+PyJWT[crypto]>=2.10,<3.0
+django-environ>=0.11,<1.0
+django-cors-headers>=4.4,<5.0
+django-ratelimit>=4.1,<5.0
+
+# Database and async services
 psycopg[binary]>=3.2,<4.0
-sqlalchemy>=2.0,<3.0
+channels[daphne]>=4.1,<5.0
+channels-redis>=4.2,<5.0
+celery[redis]>=5.4,<6.0
 redis>=5.0,<7.0
-uvicorn[standard]>=0.30,<1.0
+
+# Production HTTP, static files, and storage
+gunicorn>=23.0,<24.0
+whitenoise>=6.7,<7.0
+django-storages[s3]>=1.14,<2.0
+boto3>=1.35,<2.0
+Pillow>=10.4,<12.0
+stripe>=9.0,<15.0
+sentry-sdk>=2.0,<3.0
+
+# Security
+argon2-cffi>=23.1,<24.0
+python-decouple>=3.8,<4.0
+requests>=2.31,<3.0

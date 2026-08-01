@@ -2,7 +2,7 @@ import { FormEvent, useState } from "react";
 
 interface LoginProps {
   apiBaseUrl: string;
-  onAuthenticated: (token: string, role: string) => void;
+  onAuthenticated: () => void;
 }
 
 const benefits = [
@@ -16,6 +16,7 @@ export function Login({ apiBaseUrl, onAuthenticated }: LoginProps) {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "register">("login");
   const [displayName, setDisplayName] = useState("");
+  const [totpCode, setTotpCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,12 +25,12 @@ export function Login({ apiBaseUrl, onAuthenticated }: LoginProps) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const endpoint = mode === "login" ? "/auth/login" : "/auth/register";
-      const body = mode === "login" ? { email, password } : { email, password, display_name: displayName };
-      const response = await fetch(`${apiBaseUrl}${endpoint}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const payload = (await response.json()) as { access_token?: string; detail?: string; user?: { role?: string } };
-      if (!response.ok || !payload.access_token || !payload.user?.role) throw new Error(payload.detail ?? "Authentication failed");
-      onAuthenticated(payload.access_token, payload.user.role);
+      const endpoint = mode === "login" ? "/auth/login/" : "/auth/register/";
+      const body = mode === "login" ? { email, password, ...(totpCode ? { totp_code: totpCode } : {}) } : { email, password, display_name: displayName };
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const payload = (await response.json()) as { detail?: string };
+      if (!response.ok) throw new Error(payload.detail ?? "Authentication failed");
+      onAuthenticated();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Authentication failed");
     } finally {
@@ -68,6 +69,7 @@ export function Login({ apiBaseUrl, onAuthenticated }: LoginProps) {
             {mode === "register" && <label>Your name<input required minLength={2} value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="Ada Lovelace" /></label>}
             <label>Work email<input required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" /></label>
             <label>Password<input required type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={mode === "register" ? 12 : 1} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••••••" /></label>
+            {mode === "login" && <label>Authenticator code <span className="font-normal text-slate-400">(Enterprise only)</span><input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={totpCode} onChange={(event) => setTotpCode(event.target.value.replace(/\D/g, ""))} placeholder="123456" /></label>}
             {error && <p className="form-error" role="alert">{error}</p>}
             <button disabled={isSubmitting} className="primary-button">{isSubmitting ? "Please wait…" : mode === "login" ? "Sign in to Smart Jira" : "Create free account"}</button>
           </form>

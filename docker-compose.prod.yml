@@ -1,0 +1,23 @@
+services:
+  backend:
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DJANGO_DEBUG: "false"
+      USE_REDIS_CHANNEL_LAYER: "true"
+    restart: unless-stopped
+
+  celery:
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx/taskcraft.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/dist:/var/www/taskcraft:ro
+    depends_on:
+      - backend
+    restart: unless-stopped

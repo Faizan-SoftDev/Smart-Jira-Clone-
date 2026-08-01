@@ -49,3 +49,20 @@ Blueprint also generates `JWT_SECRET` on initial provisioning.
 - Open two browser windows and move a task; the second board should update.
 - Verify a Developer account receives `403` from `analyze-ai` while an Admin
   or Project Manager can use it.
+# Production proxy baseline
+
+Use `deploy/nginx/taskcraft.conf` as the reverse-proxy baseline. Terminate TLS
+at Nginx or Cloudflare, set production secrets, and route `/ws/` with Upgrade
+headers so authenticated project-board sockets remain connected.
+
+Build the frontend, then start the production-shaped compose stack:
+
+```bash
+cd frontend && npm ci && npm run build
+cd ..
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+```
+
+Before running this command, set `DJANGO_SECRET_KEY`, `JWT_SIGNING_KEY`,
+`DJANGO_ALLOWED_HOSTS`, PostgreSQL credentials, Redis URL, Stripe keys, and a
+production Sentry DSN in the deployment environment.

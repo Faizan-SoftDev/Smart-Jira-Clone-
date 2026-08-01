@@ -2,11 +2,11 @@ services:
   database:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: smart_jira
-      POSTGRES_USER: smart_jira
+      POSTGRES_DB: taskcraft
+      POSTGRES_USER: taskcraft
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-this-local-password}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U smart_jira -d smart_jira"]
+      test: ["CMD-SHELL", "pg_isready -U taskcraft -d taskcraft"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -18,11 +18,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg://smart_jira:${POSTGRES_PASSWORD:-change-this-local-password}@database:5432/smart_jira
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      JWT_SECRET: ${JWT_SECRET:-development-only-change-me}
-      CREATE_DATABASE_SCHEMA: "true"
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-development-only-change-me}
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgresql://taskcraft:${POSTGRES_PASSWORD:-change-this-local-password}@database:5432/taskcraft
       REDIS_URL: redis://redis:6379/0
+      USE_REDIS_CHANNEL_LAYER: "true"
     depends_on:
       database:
         condition: service_healthy
@@ -31,6 +33,19 @@ services:
 
   redis:
     image: redis:7-alpine
+
+  celery:
+    build: ./backend
+    command: celery -A config worker -l INFO
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      DATABASE_URL: postgresql://taskcraft:${POSTGRES_PASSWORD:-change-this-local-password}@database:5432/taskcraft
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   frontend:
     build: ./frontend
